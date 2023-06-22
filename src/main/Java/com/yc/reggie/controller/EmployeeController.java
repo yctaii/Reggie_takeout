@@ -4,14 +4,17 @@ import java.time.LocalDateTime;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yc.reggie.common.R;
 import com.yc.reggie.entity.Employee;
 import com.yc.reggie.service.EmployeeService;
@@ -101,4 +104,29 @@ public class EmployeeController {
         return null;
     }
 
+
+    /***
+     * 员工分页查询
+     * @param page
+     * @param pageSize
+     * @param name
+     * @return
+     */
+    @GetMapping("/page")
+    public R<Page> pageEmp(int page, int pageSize, String name) {
+        log.info("page={}, pageSize = {}, name = {}",page,pageSize,name);
+        
+        //构造分页构造器
+        Page pageInfo = new Page<>(page,pageSize);
+        
+        //接受到name时，构造条件构造器
+        LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(StringUtils.isNotEmpty(name), Employee::getName, name);
+        //添加排序条件
+        queryWrapper.orderByDesc(Employee::getCreateTime);
+        //执行查询
+        employeeService.page(pageInfo, queryWrapper);
+        
+        return R.success(pageInfo);
+    }
 }
