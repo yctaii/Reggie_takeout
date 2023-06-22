@@ -15,6 +15,7 @@ import org.springframework.util.AntPathMatcher;
 
 import com.alibaba.fastjson2.JSON;
 import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.yc.reggie.common.BaseContext;
 import com.yc.reggie.common.R;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class LoginCheckFilter implements Filter {
 
         // 1、获取本次请求的URI
         String requestURI = hRequest.getRequestURI();
-        log.info("拦截到本次请求：{}",requestURI);
+        log.info("拦截到本次请求：{}", requestURI);
 
         String[] uris = new String[] {
                 "/employee/login", // 本身就是发送登陆请求，不需要拦截
@@ -51,13 +52,18 @@ public class LoginCheckFilter implements Filter {
 
         // 3、如果不需要处理，直接放行
         if (checkres) {
-            log.info("本次请求{}不需要处理，直接放行",requestURI);
+            log.info("本次请求{}不需要处理，直接放行", requestURI);
             chain.doFilter(hRequest, hResponse);
             return;
         }
         // 4、判断登录状态，如果已经登陆，则直接放行
         if (hRequest.getSession().getAttribute("employee") != null) {
-            log.info("用户{}已经处于登录状态，直接放行",hRequest.getSession().getAttribute("employee"));
+            log.info("当前线程id:{}", Thread.currentThread().getId());
+            
+            Long empId = (Long) hRequest.getSession().getAttribute("employee");
+            BaseContext.setCurrentId(empId);
+            
+            log.info("用户{}已经处于登录状态，直接放行", hRequest.getSession().getAttribute("employee"));
             chain.doFilter(hRequest, hResponse);
             return;
         }
@@ -73,8 +79,8 @@ public class LoginCheckFilter implements Filter {
      */
     private Boolean check(String[] uris, String requestURI) {
         for (String uri : uris) {
-            //包含通配符的比较，要用 AntPathMatcher
-            if(pathMatcher.match(uri, requestURI)){
+            // 包含通配符的比较，要用 AntPathMatcher
+            if (pathMatcher.match(uri, requestURI)) {
                 return true;
             }
         }
