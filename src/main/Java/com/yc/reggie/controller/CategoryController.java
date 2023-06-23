@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -71,7 +72,22 @@ public class CategoryController {
     @DeleteMapping
     public R<String> delete(Long ids){
         log.info("接收到删除ID：{}",ids);
-        categoryService.removeById(ids);
+        //当分类关联了菜品或套餐时，不能直接删除，而是抛异常，
+        //所以不能用Mybatis提供的删除方法
+        // categoryService.removeById(ids);
+        categoryService.removeCate(ids);
         return R.success("删除成功");
     }
+
+    /**
+     * 根据id修改分类信息
+     * @param category
+     * @return
+     */
+    @PutMapping
+    public R<String> modify(@RequestBody Category category){
+        categoryService.updateById(category);
+        return R.success("修改成功");
+    }
+
 }

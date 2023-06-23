@@ -36,4 +36,13 @@ public class GlobalExceptionHandler {
         }
         return R.error("出现异常");
     }
+
+    @ExceptionHandler(CustomException.class)
+    public R<String> exceptionHandler(CustomException ex) {
+
+        return R.error(ex.getMessage());
+    }
+
+
+
 }
