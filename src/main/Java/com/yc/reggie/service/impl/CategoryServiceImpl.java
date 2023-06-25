@@ -58,4 +58,13 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
 
     }
 
+    @Override
+    public void getByType(int type) {
+
+        
+
+    }
+
+
+    
 }

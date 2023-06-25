@@ -1,5 +1,7 @@
 package com.yc.reggie.controller;
 
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -88,6 +90,23 @@ public class CategoryController {
     public R<String> modify(@RequestBody Category category){
         categoryService.updateById(category);
         return R.success("修改成功");
+    }
+
+
+    @GetMapping("/list")
+    public R<List<Category>> getCate(Category category){
+        
+        //条件构造器
+        LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //添加条件
+        lambdaQueryWrapper.eq(category.getType() != null, Category::getType, category.getType());
+        //添加排序条件
+        lambdaQueryWrapper.orderByAsc(Category::getSort).orderByDesc(Category::getUpdateTime);
+
+        List<Category> list = categoryService.list(lambdaQueryWrapper);
+
+
+        return R.success(list);
     }
 
 }

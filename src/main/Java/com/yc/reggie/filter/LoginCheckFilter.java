@@ -44,7 +44,8 @@ public class LoginCheckFilter implements Filter {
                 "/employee/login", // 本身就是发送登陆请求，不需要拦截
                 "/employee/logout",
                 "/backend/**", // 静态资源，不用拦截，不会造成数据库泄漏
-                "/front/**"
+                "/front/**",
+                "/common/**"
         };
 
         // 2、判断本次请求是否需要处理

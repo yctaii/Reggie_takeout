@@ -8,4 +8,6 @@ public interface CategoryService extends IService<Category>{
     
     //接口
     public void removeCate(Long id);
+
+    public void getByType(int type);
 }
