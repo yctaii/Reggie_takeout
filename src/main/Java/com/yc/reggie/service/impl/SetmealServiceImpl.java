@@ -106,7 +106,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         }
 
         //如果可以删除，先删除套餐表中的数据
-        setmealService.removeByIds(ids);
+        this.removeByIds(ids);
 
         //删除关系表中的数据，
         //delete * from setmeal_dish where setmeal_id in (1,2,3)
