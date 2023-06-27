@@ -170,7 +170,7 @@ public class DishController {
      * @return
      */
     @GetMapping("/list")
-    public R<List<Dish>> getCat(Dish dish){
+    public R<List<DishDto>> getCat(Dish dish){
 
         LambdaQueryWrapper<Dish> dLambdaQueryWrapper = new LambdaQueryWrapper<>();
         dLambdaQueryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
@@ -181,8 +181,22 @@ public class DishController {
 
         List<Dish> dList = dishSerivice.list(dLambdaQueryWrapper);
 
+        List<DishDto> dFDishDtos = dList.stream().map((item)->{
+            DishDto tDishDto = new DishDto();
+            //将基本信息拷贝
+            BeanUtils.copyProperties(item,tDishDto);
 
-        return R.success(dList);
+            //根据菜品的ID查出 具体的 菜品的口味
+            LambdaQueryWrapper<DishFlavor> dFQueryWrapper = new LambdaQueryWrapper<>();
+            dFQueryWrapper.eq(DishFlavor::getDishId,item.getId());
+            List<DishFlavor> list = dishFlavorService.list(dFQueryWrapper);
+            //为每个菜品绑定他们的风味
+            tDishDto.setFlavors(list);
+            return tDishDto;
+        }).collect(Collectors.toList());
+
+
+        return R.success(dFDishDtos);
     }
 
 }

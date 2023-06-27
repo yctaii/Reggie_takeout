@@ -45,7 +45,9 @@ public class LoginCheckFilter implements Filter {
                 "/employee/logout",
                 "/backend/**", // 静态资源，不用拦截，不会造成数据库泄漏
                 "/front/**",
-                "/common/**"
+                "/common/**",
+                "/user/login",
+                "/user/sendMsg"
         };
 
         // 2、判断本次请求是否需要处理
@@ -57,7 +59,7 @@ public class LoginCheckFilter implements Filter {
             chain.doFilter(hRequest, hResponse);
             return;
         }
-        // 4、判断登录状态，如果已经登陆，则直接放行
+        // 4-1、判断登录状态，如果已经登陆，则直接放行
         if (hRequest.getSession().getAttribute("employee") != null) {
             log.info("当前线程id:{}", Thread.currentThread().getId());
             
@@ -69,6 +71,15 @@ public class LoginCheckFilter implements Filter {
             return;
         }
 
+
+        //4-2 判断用户是否登陆，登陆则放行
+        if(hRequest.getSession().getAttribute("user") != null){
+            Long userId = (Long) hRequest.getSession().getAttribute("user");;
+            BaseContext.setCurrentId(userId);
+
+            chain.doFilter(hRequest, hResponse);
+            return;
+        }
         // 5、如果未登录,返回未登录结果，通过输出流方式向客户端页面响应数据
         log.info("用户未登录！");
         hResponse.getWriter().write(JSON.toJSONString(R.error("NOTLOGIN")));
