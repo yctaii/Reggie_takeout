@@ -104,7 +104,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper,Orders> implemen
 
         //为订单绑上订单id
         Long orderId = IdWorker.getId();
-
+        //原子操作，防止多线程工作时数据算错
         AtomicInteger amount = new AtomicInteger(0);
 
         List<OrderDetail> orderDetails = shopCarts.stream().map((item) -> {

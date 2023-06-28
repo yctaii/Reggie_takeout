@@ -19,4 +19,6 @@ mybatis-plus:
       id-type: ASSIGN_ID
 
 reggie:
-  path: /Users/richard/Documents/reggie-img/
+  path: /Users/richard/Documents/reggie-img/ 
+  # 上传到服务器后的位置
+  # path: /usr/local/app/reggie-img/
