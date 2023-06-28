@@ -8,5 +8,7 @@ import com.yc.reggie.entity.Orders;
 public interface OrdersService extends IService<Orders>{
 
     void getOrderWithDetail(int page, int pageSize, String number);
+
+    void submitOrder(Orders order);
     
 }

@@ -3,11 +3,8 @@ package com.yc.reggie.controller;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.yc.reggie.common.BaseContext;
 import com.yc.reggie.common.R;
-import com.yc.reggie.dto.DishDto;
 import com.yc.reggie.entity.ShoppingCart;
 import com.yc.reggie.service.ShopcartService;
 
@@ -89,6 +85,11 @@ public class ShopcartController {
         return R.success(sCart2);
     }
 
+    /***
+     * 添加购物车
+     * @param shoppingCart
+     * @return
+     */
     @PostMapping("/sub")
     public R<String> delCart(@RequestBody ShoppingCart shoppingCart) {
         LambdaQueryWrapper<ShoppingCart> shopCWrapper = new LambdaQueryWrapper<>();
@@ -120,5 +121,14 @@ public class ShopcartController {
         }
 
         return R.success("删除成功！");
+    }
+
+
+    @DeleteMapping("/clean")
+    public R<String> cleanCart(){
+        LambdaQueryWrapper<ShoppingCart> scQWrapper = new LambdaQueryWrapper<>();
+        scQWrapper.eq(ShoppingCart::getUserId,BaseContext.getCurrentId());
+        shopcartService.remove(scQWrapper);
+        return R.success("购物车清空成功！");
     }
 }
