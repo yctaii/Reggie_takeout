@@ -1,33 +1,24 @@
 package com.yc.reggie.controller;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.jaxb.SpringDataJaxb.OrderDto;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.yc.reggie.common.BaseContext;
 import com.yc.reggie.common.R;
-import com.yc.reggie.dto.DishDto;
 import com.yc.reggie.dto.OrdersDto;
-import com.yc.reggie.entity.DishFlavor;
-import com.yc.reggie.entity.OrderDetail;
 import com.yc.reggie.entity.Orders;
-import com.yc.reggie.service.OrderDetailService;
 import com.yc.reggie.service.OrdersService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,9 +30,6 @@ public class OrdersController {
 
     @Autowired
     private OrdersService ordersService;
-
-    @Autowired
-    private OrderDetailService orderDetailService;
 
     /**
      * 用户下单，提交给服务器
@@ -70,41 +58,9 @@ public class OrdersController {
     public R<Page> getOrder(int page, int pageSize) {
         // log.info("接收到查询请求{}{}",page,pageSize);
 
-        Page<Orders> orderPage = new Page<>(page, pageSize);
+        Page<OrdersDto> userOrder = ordersService.getUserOrder(page,pageSize);;
+        return R.success(userOrder);
 
-        // 设置条件查询过滤
-        Long userId = BaseContext.getCurrentId();
-        LambdaQueryWrapper<Orders> oWrapper = new LambdaQueryWrapper<>();
-        oWrapper.eq(Orders::getUserId, userId);
-        oWrapper.orderByDesc(Orders::getCheckoutTime);
-
-        List<Orders> oList = ordersService.list(oWrapper);
-
-        List<OrdersDto> orderDtos = oList.stream().map((item) -> {
-
-            OrdersDto ordersDto = new OrdersDto();
-            BeanUtils.copyProperties(item, ordersDto);
-            // 因为每次的过滤条件不一样，所以要每次都要new一下
-            LambdaQueryWrapper<OrderDetail> odetaiLambdaQueryWrapper = new LambdaQueryWrapper<>();
-
-            odetaiLambdaQueryWrapper.eq(OrderDetail::getOrderId, item.getId());
-
-            List<OrderDetail> oDetaillist = orderDetailService.list(odetaiLambdaQueryWrapper);
-            ordersDto.setOrderDetails(oDetaillist);
-
-            return ordersDto;
-
-        }).collect(Collectors.toList());
-
-        ordersService.page(orderPage, oWrapper);
-        ;
-
-        Page<OrdersDto> odPage = new Page<>();
-        BeanUtils.copyProperties(orderPage, odPage, "records");
-
-        odPage.setRecords(orderDtos);
-
-        return R.success(odPage);
     }
 
     /**
@@ -175,4 +131,27 @@ public class OrdersController {
         ordersService.updateById(orders);
         return R.success("派送成功！");
     }
+
+
+    //@requestParam 和 @requestBody的区别
+    //前者是从请求连接中获取参数
+    //后者是从请求体中获取参数
+    //前者是处理简单的基本类型的数据
+    //后者是处理复杂的对象类型的数据
+    /**
+     * @RequestBody用于接收前端传来的json数据，将其转换为对象
+     * 而不是处理简单的基本类型的数据
+     * @param map
+     * @return
+     */
+    @PostMapping("/again")
+    public R<String> againOrder(@RequestBody Map map){
+        Long id = Long.parseLong((String) map.get("id"));
+        // log.info("再来一单的id:{}",id);
+        ordersService.againOrder(id);
+
+        return R.success("再来一单！");
+    }
+
+
 }
