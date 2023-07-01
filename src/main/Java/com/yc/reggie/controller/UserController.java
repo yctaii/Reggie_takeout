@@ -1,11 +1,13 @@
 package com.yc.reggie.controller;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +31,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private RedisTemplate redisT;
+
     /**
      * 获取验证码，并把生成的验证码加入到Session方便后续比对
      * 
@@ -50,7 +55,10 @@ public class UserController {
 
             log.info(code);
             // 将生成的验证码保存到session，后面可以用手机号取出
-            session.setAttribute(phone, code);
+            // session.setAttribute(phone, code);
+
+            //将生成的验证码保存到redis，后面可以用手机号取出，有效期5分钟
+            redisT.opsForValue().set(phone,code,5,TimeUnit.MINUTES);
             return R.success("发送验证码成功！");
         }
 
@@ -75,9 +83,11 @@ public class UserController {
         String phone = map.get("phone").toString();
         String code = map.get("code").toString();
         // 当时存放session时使用phone变量存的
-        log.info("接收到后端生成验证码:{}", session.getAttribute(phone));
-        String genCode = session.getAttribute(phone).toString();
+        // log.info("接收到后端生成验证码:{}", session.getAttribute(phone));
+        // String genCode = session.getAttribute(phone).toString();
 
+        //从redis中取出生成的验证码
+        String genCode = (String) redisT.opsForValue().get(phone);
         // 当用户输入的验证码不为空且正确时
         if (code == null) {
             throw new CustomException("验证码不能为空");
@@ -95,6 +105,9 @@ public class UserController {
             // 在session中绑定用户id才能记住登录状态
             User one = userService.getOne(userQueryWrapper);
             session.setAttribute("user", one.getId());
+
+            //用户登录成功则删除redis中的验证码
+            redisT.delete(phone);
             return R.success(one);
         }
 
