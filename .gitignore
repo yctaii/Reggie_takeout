@@ -1,1 +1,7 @@
 target/*
+.git
+logs
+rebel.xml
+!.mvn/wrapper/maven-wrapper.jar
+.DS_Store
+.vscode/*
