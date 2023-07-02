@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +19,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yc.reggie.common.R;
 import com.yc.reggie.dto.OrdersDto;
+import com.yc.reggie.entity.OrderDetail;
 import com.yc.reggie.entity.Orders;
+import com.yc.reggie.service.OrderDetailService;
 import com.yc.reggie.service.OrdersService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +34,8 @@ public class OrdersController {
     @Autowired
     private OrdersService ordersService;
 
+    @Autowired
+    private OrderDetailService orderDetailService;
     /**
      * 用户下单，提交给服务器
      * 
@@ -101,15 +106,29 @@ public class OrdersController {
 
         ordersService.page(oPage, oWrapper);
 
+        Page<OrdersDto> oddPage = new Page<>();
+
+        BeanUtils.copyProperties(oPage, oddPage, "records");
+
         List<Orders> records = oPage.getRecords();
-        records = records.stream().map((item) -> {
-            item.setUserName("用户" + item.getUserId());
-            return item;
+
+        List<OrdersDto> dtorecords = records.stream().map((item) -> {
+            OrdersDto ordersDto = new OrdersDto();
+            BeanUtils.copyProperties(item, ordersDto);
+            ordersDto.setUserName("用户" + ordersDto.getUserId());
+            //获取订单的菜品详情
+            LambdaQueryWrapper<OrderDetail> oLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            oLambdaQueryWrapper.eq(OrderDetail::getOrderId,ordersDto.getId());
+            List<OrderDetail> dishes = orderDetailService.list(oLambdaQueryWrapper);   
+            
+            //给返回信息绑定菜品信息
+            ordersDto.setOrderDetails(dishes);
+            return ordersDto;
         }).collect(Collectors.toList());
+        
+        oddPage.setRecords(dtorecords);
 
-        oPage.setRecords(records);
-
-        return R.success(oPage);
+        return R.success(oddPage);
     }
 
     /**
