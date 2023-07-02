@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +40,6 @@ public class SetmealController {
 
     @Autowired
     private CategoryService categoryService;
-
 
     @GetMapping("/page")
     public R<Page> getSetMeal(int page, int pageSize, String name) {
@@ -85,6 +86,7 @@ public class SetmealController {
      * @return
      */
     @PostMapping
+    @CacheEvict(value = "setmealCache", allEntries = true)
     public R<String> saveSetMealDish(@RequestBody SetmealDto setmealDto) {
 
         setmealService.saveWithSetmeal(setmealDto);
@@ -129,11 +131,11 @@ public class SetmealController {
      * @return
      */
     @PostMapping("/status/{s}")
-    public R<String> changeStatus(@PathVariable Integer s, @RequestParam List<Long> ids){
-        LambdaQueryWrapper<Setmeal> setmQueryWrapper = new LambdaQueryWrapper<>();    
-        setmQueryWrapper.in(Setmeal::getId,ids);
+    public R<String> changeStatus(@PathVariable Integer s, @RequestParam List<Long> ids) {
+        LambdaQueryWrapper<Setmeal> setmQueryWrapper = new LambdaQueryWrapper<>();
+        setmQueryWrapper.in(Setmeal::getId, ids);
 
-        List<Setmeal> collect = setmealService.list(setmQueryWrapper).stream().map((item->{
+        List<Setmeal> collect = setmealService.list(setmQueryWrapper).stream().map((item -> {
             item.setStatus(s);
             return item;
         })).collect(Collectors.toList());
@@ -143,32 +145,40 @@ public class SetmealController {
         return R.success("更改售卖状态成功！");
     }
 
-
-
     /**
      * 当请求中有多个同一类型数据，可以用list封装
      * 要用@RequestParam注解
+     * 
      * @param ids
      * @return
      */
     @DeleteMapping
+    @CacheEvict(value = "setmealCache", allEntries = true)
     public R<String> deleteSetmeal(@RequestParam List<Long> ids) {
-        if(ids.size() == 0){
+        if (ids.size() == 0) {
             throw new CustomException("请选中要批量删除的套餐！");
         }
         setmealService.removeWithDish(ids);
         return R.success("删除成功!");
     }
 
-
+    /**
+     * SpringCache 缓存技术只支持缓存可以序列化的对象！！！
+     * 要记得将 R 序列化
+     * 
+     * @param setmealDto
+     * @return
+     */
     @GetMapping("/list")
-    public R<List<Setmeal>> getSetMeal(SetmealDto setmealDto){
+    @Cacheable(value = "setmealCache", key = "#setmealDto.categoryId + '_' + #setmealDto.status")
+    public R<List<Setmeal>> getSetMeal(SetmealDto setmealDto) {
         // log.info("收到要查询的Setmeal{}",setmealDto.getCategoryId());
         LambdaQueryWrapper<Setmeal> sWrapper = new LambdaQueryWrapper<>();
-        sWrapper.eq(Setmeal::getCategoryId,setmealDto.getCategoryId());
-        sWrapper.eq(Setmeal::getStatus,setmealDto.getStatus());
+        sWrapper.eq(Setmeal::getCategoryId, setmealDto.getCategoryId());
+        sWrapper.eq(Setmeal::getStatus, setmealDto.getStatus());
 
-        List<Setmeal> list = setmealService.list(sWrapper);;
+        List<Setmeal> list = setmealService.list(sWrapper);
+        ;
         return R.success(list);
     }
 }

@@ -3,12 +3,14 @@ package com.yc.reggie;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
+@EnableCaching
 @SpringBootApplication
 @ServletComponentScan    //这样才会扫描Webfilter注解，然后使过滤器生效
 @EnableTransactionManagement
