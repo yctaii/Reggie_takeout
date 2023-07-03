@@ -3,15 +3,47 @@ server:
 spring:
   application:
     name: reggie_take_out
-  datasource:
-    druid:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/reggie?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
-      username: root
-      password: TYc9811.
+  # datasource:
+  #   druid:
+  #     driver-class-name: com.mysql.cj.jdbc.Driver
+  #     url: jdbc:mysql://localhost:3306/reggie?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+  #     username: root
+  #     password: TYc9811.
+  shardingsphere:
+    datasource:
+      names:
+        master,slave #名字可以随便取，但要与下面保持一致
+      #主数据源
+      master:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://146.56.131.223:3306/reggie?characterEncoding=utf-8
+        username: root
+        password: TYc9811.
+      #从数据源
+      slave:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://155.248.175.115:3306/reggie?characterEncoding=utf-8
+        username: root
+        password: TYc9811.
+    masterslave:
+      #读写分离配置
+      load-balance-algorithm-type: round_robin #加载均衡算法  轮询
+      #最终数据源名称
+      name: dataSource
+      #主数据源名称，单个
+      master-data-source-name: master
+      #从数据源名称列表，可单个可多个，多个逗号分隔
+      slave-data-source-names: slave
+    props:
+      sql:
+        show: true   #开启sql显示，默认false
+  main:
+    allow-bean-definition-overriding: true
   redis:
     host: localhost
-    port: 6379
+    port: 6 379
     password: TYc9811.
     database: 0
   cache:
@@ -27,6 +59,6 @@ mybatis-plus:
       id-type: ASSIGN_ID
 
 reggie:
-  path: /Users/richard/Documents/reggie-img/ 
+  # path: /Users/richard/Documents/reggie-img/ 
   # 上传到服务器后的位置
-  # path: /usr/local/app/reggie-img/
+  path: /usr/local/app/reggie-img/

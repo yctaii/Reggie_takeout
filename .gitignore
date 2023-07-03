@@ -5,3 +5,4 @@ rebel.xml
 !.mvn/wrapper/maven-wrapper.jar
 .DS_Store
 .vscode/*
+dump.rdb
